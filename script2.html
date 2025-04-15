@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Balloon GPS Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { height: 90%; }
+    #info {
+      height: 10%;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+      background: #f8f8f8;
+      border-top: 1px solid #ccc;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .label { font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div id="map"></div>
+  <div id="info">
+    <div><span class="label">Latitude:</span> <span id="lat">--</span></div>
+    <div><span class="label">Longitude:</span> <span id="lon">--</span></div>
+    <div><span class="label">Altitude:</span> <span id="alt">--</span> m</div>
+    <div><span class="label">Speed:</span> <span id="speed">--</span> m/s</div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      databaseURL: "https://gps-tracker-72aed-default-rtdb.firebaseio.com/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Initialize map
+    const map = L.map('map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    const marker = L.marker([0, 0]).addTo(map);
+
+    // Update map and info panel
+    db.ref().on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data && data.latitude && data.longitude) {
+        const { latitude, longitude, altitude, speed } = data;
+        marker.setLatLng([latitude, longitude]);
+        map.setView([latitude, longitude], 12);
+
+        document.getElementById('lat').textContent = latitude.toFixed(5);
+        document.getElementById('lon').textContent = longitude.toFixed(5);
+        document.getElementById('alt').textContent = altitude.toFixed(2);
+        document.getElementById('speed').textContent = speed.toFixed(2);
+      }
+    });
+  </script>
+</body>
+</html>
