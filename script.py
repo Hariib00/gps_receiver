@@ -2,7 +2,7 @@ import pandas as pd
 import requests
 import time
 
-FIREBASE_URL = 'https://gps-tracker-72aed-default-rtdb.firebaseio.com/.json'  # root path + .json
+FIREBASE_URL ='https://gps-tracker-72aed-default-rtdb.firebaseio.com/locations.json'  # root path + .json
 
 df = pd.read_csv('balloon_full_2.csv')
 
@@ -14,10 +14,10 @@ for index, row in df.iterrows():
         'speed': row.get('speed', 0)  # optional, fill 0 if not in CSV
     }
 
-    response = requests.put(FIREBASE_URL, json=data)  # <-- overwrite root node
+    response = requests.post(FIREBASE_URL, json=data)  # <-- overwrite root node
     if response.status_code == 200:
         print(f"Sent: {data}")
     else:
         print(f"Failed to send: {data}, Error: {response.text}")
 
-    time.sleep(5)
+    time.sleep(0.01)
