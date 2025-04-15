@@ -11,10 +11,10 @@ for index, row in df.iterrows():
         'latitude': row['lat'],
         'longitude': row['lon'],
         'altitude': row['alt'],
-        'speed': row.get('speed', 0)  # optional, fill 0 if not in CSV
+        'speed': row.get('speed', 0) 
     }
 
-    response = requests.post(FIREBASE_URL, json=data)  # <-- overwrite root node
+    response = requests.post(FIREBASE_URL, json=data)
     if response.status_code == 200:
         print(f"Sent: {data}")
     else:
