@@ -34,63 +34,40 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
   <script>
-    // Firebase config
-    const firebaseConfig = {
-      databaseURL: "https://gps-tracker-72aed-default-rtdb.firebaseio.com/"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-  
-    // Initialize map
-    const map = L.map('map').setView([0, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-  
-    const markers = [];
-    const latlngs = [];
-  
-    // Listen for changes in /locations
-    db.ref('locations').on('value', (snapshot) => {
-      const locations = snapshot.val();
-      if (!locations) return;
-  
-      // Clear previous markers and path
-      markers.forEach(marker => map.removeLayer(marker));
-      markers.length = 0;
-      latlngs.length = 0;
-  
-      // Sort by key (Firebase keys are time-based)
-      const sortedKeys = Object.keys(locations).sort();
-      sortedKeys.forEach(key => {
-        const data = locations[key];
-        if (data.latitude && data.longitude) {
-          const latlng = [data.latitude, data.longitude];
-          latlngs.push(latlng);
-  
-          const marker = L.marker(latlng).addTo(map);
-          marker.bindPopup(`Alt: ${data.altitude ?? '--'} m<br>Speed: ${data.speed ?? '--'} m/s`);
-          markers.push(marker);
-        }
-      });
-  
-      // Fit map to show all markers
-      if (latlngs.length > 0) {
-        map.fitBounds(latlngs);
-      }
-  
-      // Update info panel with latest point
-      const last = locations[sortedKeys.at(-1)];
-      if (last) {
-        document.getElementById('lat').textContent = last.latitude.toFixed(5);
-        document.getElementById('lon').textContent = last.longitude.toFixed(5);
-        document.getElementById('alt').textContent = last.altitude?.toFixed(2) || '--';
-        document.getElementById('speed').textContent = last.speed?.toFixed(2) || '--';
-      }
-  
-      // Optional: draw trajectory line
-      if (latlngs.length > 1) {
-        L.polyline(latlngs, { color: 'blue' }).addTo(map);
-      }
-    });
-  </script>  
+  // Firebase config
+  const firebaseConfig = {
+    databaseURL: "https://gps-tracker-72aed-default-rtdb.firebaseio.com/"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // Initialize map
+  const map = L.map('map').setView([0, 0], 2);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  const marker = L.marker([0, 0]).addTo(map);
+
+  // Listen for changes in /locations
+  db.ref('locations').on('value', (snapshot) => {
+    const locations = snapshot.val();
+    if (!locations) return;
+
+    // Get the most recent key
+    const latestKey = Object.keys(locations).sort().pop();
+    const data = locations[latestKey];
+
+    if (data && data.latitude && data.longitude) {
+      const { latitude, longitude, altitude, speed } = data;
+      marker.setLatLng([latitude, longitude]);
+      map.setView([latitude, longitude], 12);
+
+      document.getElementById('lat').textContent = latitude.toFixed(5);
+      document.getElementById('lon').textContent = longitude.toFixed(5);
+      document.getElementById('alt').textContent = altitude?.toFixed(2) || '--';
+      document.getElementById('speed').textContent = speed?.toFixed(2) || '--';
+    }
+  });
+</script>
+
+  </script>
 </body>
 </html>
